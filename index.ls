@@ -33,30 +33,29 @@ export lego = Backbone.Model.extend4000 do
       else obj
 
     # backbone sync implementation
-    mongo.sync = (CollectionConstructor) ->
+    mongo.sync = ({collectionName, modelConstructor, collectionConstructor}) ->
       
-      collection = mongo.collection collectionName = CollectionConstructor::name
-      ModelConstructor = CollectionConstructor::model
+      collection = mongo.collection collectionName
       
       (method, model, options) ->
-        console.log "SYNC", collectionName, method: method, model: model.toJSON()
+#        console.log "SYNC", collectionName, method: method, model: model.toJSON()
         
         switch method
           | 'create' =>
-            collection.insert model.toJSON()
+            collection.insert model.toJSON!
             .then -> model.attributes <<< translateIn head it.ops
             
           | 'read' =>
             switch model?@@
-            
-              | ModelConstructor =>
+           
+              | modelConstructor =>
                 collection.findOne( _id: model.get('id')).then ->
                   model.attributes <<< it
                 
-              | CollectionConstructor =>
+              | (collectionConstructor or false) =>
                 model.reset!
                 collection.find({}).toArray().then ->
-                  map it, (entry) -> model.add new ModelConstructor translateIn entry
+                  map it, (entry) -> model.add new modelConstructor translateIn entry
                     
               | _ => throw new Error "wat"
                 
