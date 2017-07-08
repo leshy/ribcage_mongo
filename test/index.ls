@@ -15,7 +15,7 @@ before -> new p (resolve,reject) ~>
         mongo:
           name: 'test'
 
-  init env, (err,env) ~> 
+  init env, (err,env) ~>
     @Model =  Backbone.Model.extend4000({})
     @Collection = Backbone.Collection.extend4000 do
       name: 'testCollection'
@@ -23,8 +23,8 @@ before -> new p (resolve,reject) ~>
 
     @Collection::sync = @Model::sync = env.mongo.sync do
       collectionName: 'testCollection'
-      modelConstructor: @Model
       collectionConstructor: @Collection
+      modelConstructor: @Model
       verbose: true
       resolve!
 
@@ -46,23 +46,42 @@ describe 'model', ->
       assert.equal it.test, 66
       assert.equal it, @x.attributes
       resolve!
+
+  specify 'delete', -> new p (resolve,reject) ~>
+    @x.destroy()
+    .then -> resolve!
+
+describe 'collection', ->
+  before ->
+    @c = new @Collection()
+    @c.fetch()
+    .then (ret) -> p.map ret, (.destroy!)
+    .then ~> 
+      p.map [
+        new @Model test: 91, args: { collection: 2 }
+        new @Model test: 90, args: { collection: 1 } ], -> it.save!
       
-      # collection = new Collection()
-      # x.save()
-      # .then ->
-      #   console.log x.attributes
-      #   x.set test: 66
-      #   x.save()
-      #   .then ->
-      #     x.fetch()
-      #     .then ->
-      #      console.log "MODEL READ",it
-      #      collection.fetch()
-      #      .then ->
-      #         x.destroy()
-      #         .then ->
-      #           console.log "destroy", it
-      #           resolve!
+  specify 'fetch', ->
+    @c.fetch()
+    .then (ret) ~> 
+      assert.equal ret?@@, Array
+      assert.equal ret.length, 2
+      assert.equal head ret@@ is @Mode
+
+    
+      
+
+  specify 'save', ->
+    @c.fetch()
+    .then (ret) ~> 
+      assert.equal ret?@@, Array
+      m = last(ret)
+      m.set kaka: 39
+      m.save()
+    .then ->
+      assert it.kaka, 39
+
+            
       
 
       

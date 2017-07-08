@@ -64,6 +64,7 @@ export lego = Backbone.Model.extend4000 do
                 
           
           | 'update' =>
+            console.log 'update call', model.attributes, model.changed
             collection.update { "_id": model.get('id') }, { '$set': model.changed }
             .then ({ result }) -> new p (resolve,reject) ~>
               if result.ok isnt 1 or result.nModified isnt 1 then return reject new Error "update failed"
