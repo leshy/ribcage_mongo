@@ -25,7 +25,7 @@ before -> new p (resolve,reject) ~>
       collectionName: 'testCollection'
       collectionConstructor: @Collection
       modelConstructor: @Model
-      verbose: true
+      verbose: false
       resolve!
 
 describe 'model', ->
@@ -55,35 +55,44 @@ describe 'collection', ->
   before ->
     @c = new @Collection()
     @c.fetch()
-    .then (ret) -> p.map ret, (.destroy!)
+    .then (ret) -> p.map ret, (.destroy!) # clear collection
     .then ~> 
       p.map [
         new @Model test: 91, args: { collection: 2 }
         new @Model test: 90, args: { collection: 1 } ], -> it.save!
       
-  specify 'fetch', ->
-    @c.fetch()
+
+  specify 'parametric fetch', ->
+    @c.fetch(search: { test: 91 })
     .then (ret) ~> 
       assert.equal ret?@@, Array
-      assert.equal ret.length, 2
-      assert.equal head ret@@ is @Mode
-
-    
+      assert.equal ret.length, 1
+      assert.equal head ret@@ is @Model
+      assert.equal head(ret).get('args').collection, 2
       
-
-  specify 'save', ->
+      
+  specify 'update model', ->
     @c.fetch()
     .then (ret) ~> 
       assert.equal ret?@@, Array
       m = last(ret)
       m.set kaka: 39
       m.save()
-    .then ->
-      assert it.kaka, 39
-
-            
       
+    .then -> assert it.kaka, 39
 
-      
 
-    
+  specify 'fetch and delete', ->
+    @c.fetch()
+    .then (ret) ~> 
+      assert.equal ret?@@, Array
+      assert.equal ret.length, 2
+      assert.equal head ret@@ is @Model
+
+      p.map ret, (.destroy!)
+
+  specify 'check if clean', ->
+    @c.fetch()
+    .then (ret) ~> 
+      assert.equal ret?@@, Array
+      assert.equal ret.length, 0

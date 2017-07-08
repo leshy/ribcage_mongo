@@ -40,7 +40,7 @@ export lego = Backbone.Model.extend4000 do
       
       (method, model, options) ->
         
-        if verbose then console.log "SYNC", collectionName, method: method, model: model.toJSON()
+        if verbose then console.log "SYNC", collectionName, method: method, options: options, model: model.toJSON()
         
         switch method
           | 'create' =>
@@ -57,14 +57,13 @@ export lego = Backbone.Model.extend4000 do
                 
               | (collectionConstructor or false) =>
                 model.reset!
-                collection.find({}).toArray().then ->
+                collection.find( options.search or {}).toArray().then ->
                   map it, (entry) -> model.add new modelConstructor translateIn entry
                     
               | _ => throw new Error "wat"
                 
           
           | 'update' =>
-            console.log 'update call', model.attributes, model.changed
             collection.update { "_id": model.get('id') }, { '$set': model.changed }
             .then ({ result }) -> new p (resolve,reject) ~>
               if result.ok isnt 1 or result.nModified isnt 1 then return reject new Error "update failed"
