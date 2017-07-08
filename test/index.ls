@@ -8,46 +8,61 @@ require! {
   backbone4000: Backbone
 }
 
-describe 'root', ->
+before -> new p (resolve,reject) ~>
+  env = do
+    settings:
+      module:
+        mongo:
+          name: 'test'
 
-  specify 'init', -> new p (resolve,reject) ~>
-    env = do
-      settings:
-        module:
-          mongo:
-            name: 'test'
+  init env, (err,env) ~> 
+    @Model =  Backbone.Model.extend4000({})
+    @Collection = Backbone.Collection.extend4000 do
+      name: 'testCollection'
+      model: @Model
+
+    @Collection::sync = @Model::sync = env.mongo.sync do
+      collectionName: 'testCollection'
+      modelConstructor: @Model
+      collectionConstructor: @Collection
+      verbose: true
+      resolve!
+
+describe 'model', ->
+  
+  before ->
+    @x = new @Model test: 33, args: { bla: 1 }
     
-    init env, (err,env) ->
-      
-      ModelSync =  Backbone.Model.extend4000({})
-      
-      ModelCollection = Backbone.Collection.extend4000 do
-        name: 'task'
-        model: ModelSync
+  specify 'create', -> new p (resolve,reject) ~>
+    @x.save().then ~> 
+      assert.ok it.id
+      assert.deepEqual @x.attributes, it
+      resolve!
 
-      ModelCollection::sync = ModelSync::sync = env.mongo.sync do
-        collectionName: 'task'
-        modelConstructor: ModelSync
-        collectionConstructor: ModelCollection
-        verbose: true
-
-      collection = new ModelCollection()
-      x = new ModelSync test: 33, args: { bla: 1 }
-      x.save()
-      .then ->
-        console.log x.attributes
-        x.set test: 66
-        x.save()
-        .then ->
-          x.fetch()
-          .then ->
-           console.log "MODEL READ",it
-           collection.fetch()
-           .then ->
-              x.destroy()
-              .then ->
-                console.log "destroy", it
-                resolve!
+  specify 'update', -> new p (resolve,reject) ~>
+    @x.set test: 66
+    @x.save()
+    .then ~> 
+      assert.equal it.test, 66
+      assert.equal it, @x.attributes
+      resolve!
+      
+      # collection = new Collection()
+      # x.save()
+      # .then ->
+      #   console.log x.attributes
+      #   x.set test: 66
+      #   x.save()
+      #   .then ->
+      #     x.fetch()
+      #     .then ->
+      #      console.log "MODEL READ",it
+      #      collection.fetch()
+      #      .then ->
+      #         x.destroy()
+      #         .then ->
+      #           console.log "destroy", it
+      #           resolve!
       
 
       

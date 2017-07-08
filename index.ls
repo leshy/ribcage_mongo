@@ -2,6 +2,7 @@ require! {
   leshdash: { head, map, each }
   backbone4000: Backbone
   mongodb
+  bluebird: p
   mongodb: { ObjectId }
   colors
 }
@@ -44,7 +45,8 @@ export lego = Backbone.Model.extend4000 do
         switch method
           | 'create' =>
             collection.insert model.toJSON!
-            .then -> model.attributes <<< translateIn head it.ops
+            .then ->
+              model.attributes <<< translateIn head it.ops
             
           | 'read' =>
             switch model?@@
@@ -63,7 +65,9 @@ export lego = Backbone.Model.extend4000 do
           
           | 'update' =>
             collection.update { "_id": model.get('id') }, { '$set': model.changed }
-            .then -> true
+            .then ({ result }) -> new p (resolve,reject) ~>
+              if result.ok isnt 1 or result.nModified isnt 1 then return reject new Error "update failed"
+              resolve model.attributes
             
           | 'delete' =>
             collection.remove { "_id": model.get('id') }
