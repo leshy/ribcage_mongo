@@ -33,12 +33,13 @@ export lego = Backbone.Model.extend4000 do
       else obj
 
     # backbone sync implementation
-    mongo.sync = ({collectionName, modelConstructor, collectionConstructor}) ->
+    mongo.sync = ({collectionName, modelConstructor, collectionConstructor, verbose}) ->
       
       collection = mongo.collection collectionName
       
       (method, model, options) ->
-#        console.log "SYNC", collectionName, method: method, model: model.toJSON()
+        
+        if verbose then console.log "SYNC", collectionName, method: method, model: model.toJSON()
         
         switch method
           | 'create' =>

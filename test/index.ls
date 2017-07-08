@@ -25,7 +25,11 @@ describe 'root', ->
         name: 'task'
         model: ModelSync
 
-      ModelCollection::sync = ModelSync::sync = env.mongo.sync collectionName: 'task', modelConstructor: ModelSync, collectionConstructor: ModelCollection
+      ModelCollection::sync = ModelSync::sync = env.mongo.sync do
+        collectionName: 'task'
+        modelConstructor: ModelSync
+        collectionConstructor: ModelCollection
+        verbose: true
 
       collection = new ModelCollection()
       x = new ModelSync test: 33, args: { bla: 1 }
