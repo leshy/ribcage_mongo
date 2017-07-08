@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "backbone4000": "git://github.com/leshy/backbone4000.git",
+    "bluebird": "^3.5.0",
     "colors": "^1.1.2",
+    "leshdash": "git://github.com/leshy/leshdash.git",
     "mongodb": "^2.2.24"
   },
   "author": "lesh",
