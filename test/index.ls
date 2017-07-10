@@ -56,11 +56,7 @@ describe 'collection', ->
   before -> 
     @c = new @Collection()
     @c.fetch().then (ret) ->
-      console.log "RET", ret
-      console.log "RET", ret.models
-      p.all ret.map (obj) ->
-        console.log "REMOVEING",obj
-        if obj? then obj.destroy!
+      p.map ret.toArray!, (.destroy!)
       
     .then ~>
       p.map [
@@ -88,13 +84,14 @@ describe 'collection', ->
       .then (ret) ->
         assert.equal ret.length, 1
 
-  specify 'fetch and delete', ->
+  specify 'fetch and delete', -> 
     @c.fetch()
     .then (ret) ~> 
       assert.equal ret?@@, @c@@
       assert.equal ret.length, 2
       assert.equal head(ret.models)@@, @Model
-      p.map ret.models, -> if it then it.destroy!
+      
+      p.map ret.toArray!, (.destroy!)
 
   specify 'check if clean', ->
     @c.fetch()

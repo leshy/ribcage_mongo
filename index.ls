@@ -57,19 +57,14 @@ export lego = Backbone.Model.extend4000 do
                   model.attributes <<< it
                 
               | (collectionConstructor or false) =>
-                console.log "MAP START", options.search or {}
                 collection.find( options.search or {}).toArray().then ->
                   model.reset!
-                  map it, (entry) ->
-                    console.log "MAP ADD", model.add new modelConstructor translateIn entry
-                  console.log "MAPPING DONE"
+                  map it, (entry) -> model.add new modelConstructor translateIn entry
                   model
                     
               | _ =>
-                console.log 'got model', model
                 throw new Error "wat"
                 
-          
           | 'update' =>
             collection.update { "_id": ObjectId(model.get('id')) }, { '$set': model.changed }
             .then ({ result }) -> new p (resolve,reject) ~>
