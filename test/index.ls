@@ -16,10 +16,10 @@ before -> new p (resolve,reject) ~>
           name: 'test'
 
   init env, (err,env) ~>
-    @Model =  Backbone.Model.extend4000({})
+    @Model =  Backbone.Model.extend4000 inspect: -> "MODEL #{@id}"
     @Collection = Backbone.Collection.extend4000 do
       name: 'testCollection'
-      model: @Model
+      inspect: -> "COLLECTION #{@length}"
 
     @Collection::sync = @Model::sync = env.mongo.sync do
       collectionName: 'testCollection'
@@ -35,16 +35,16 @@ describe 'model', ->
     
   specify 'create', -> new p (resolve,reject) ~>
     @x.save().then ~> 
-      assert.ok it.id
-      assert.deepEqual @x.attributes, it
+      assert.ok it.attributes.id
+      assert.deepEqual @x.attributes, it.attributes
       resolve!
 
   specify 'update', -> new p (resolve,reject) ~>
     @x.set test: 66
     @x.save()
     .then ~> 
-      assert.equal it.test, 66
-      assert.equal it, @x.attributes
+      assert.equal it.attributes.test, 66
+      assert.equal it.attributes, @x.attributes
       resolve!
 
   specify 'delete', -> new p (resolve,reject) ~>
@@ -52,47 +52,52 @@ describe 'model', ->
     .then -> resolve!
 
 describe 'collection', ->
-  before ->
+  
+  before -> 
     @c = new @Collection()
-    @c.fetch()
-    .then (ret) -> p.map ret, (.destroy!) # clear collection
-    .then ~> 
-      p.map [
-        new @Model test: 91, args: { collection: 2 }
-        new @Model test: 90, args: { collection: 1 } ], -> it.save!
+    @c.fetch().then (ret) ->
+      console.log "RET", ret
+      console.log "RET", ret.models
+      p.all ret.map (obj) ->
+        console.log "REMOVEING",obj
+        if obj? then obj.destroy!
       
-
+    .then ~>
+      p.map [
+        new @Model test: 91, args: { x: 2 }
+        new @Model test: 90, args: { x: 1 } ], (.save!)
+        
   specify 'parametric fetch', ->
     @c.fetch(search: { test: 91 })
-    .then (ret) ~> 
-      assert.equal ret?@@, Array
+    .then (ret) ~>
+      assert.equal ret?@@, @Collection
       assert.equal ret.length, 1
-      assert.equal head ret@@ is @Model
-      assert.equal head(ret).get('args').collection, 2
-      
+      assert.equal head(ret.models)@@, @Model
+      assert.equal head(ret.models).get('args').x, 2
       
   specify 'update model', ->
     @c.fetch()
     .then (ret) ~> 
-      assert.equal ret?@@, Array
-      m = last(ret)
+      assert.equal ret?@@, @c@@
+      m = last(ret.models)
       m.set kaka: 39
       m.save()
       
-    .then -> assert it.kaka, 39
-
+    .then ~> 
+      @c.fetch search: { kaka: 39 }
+      .then (ret) ->
+        assert.equal ret.length, 1
 
   specify 'fetch and delete', ->
     @c.fetch()
     .then (ret) ~> 
-      assert.equal ret?@@, Array
+      assert.equal ret?@@, @c@@
       assert.equal ret.length, 2
-      assert.equal head ret@@ is @Model
-
-      p.map ret, (.destroy!)
+      assert.equal head(ret.models)@@, @Model
+      p.map ret.models, -> if it then it.destroy!
 
   specify 'check if clean', ->
     @c.fetch()
     .then (ret) ~> 
-      assert.equal ret?@@, Array
+      assert.equal ret?@@, @c@@
       assert.equal ret.length, 0

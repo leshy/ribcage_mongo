@@ -11,12 +11,11 @@ require! {
 export lego = Backbone.Model.extend4000 do
   after: 'logger'
   init: (callback) ->
-
     @env.mongo = mongo = new mongodb.Db @settings.name, new mongodb.Server(@settings.host or 'localhost', @settings.port or 27017), safe: true
 
     @env.mongo.open (err, db) ~> 
       data = colors.green('mongodb://' + @env.mongo.serverConfig.host + ":" + @env.mongo.serverConfig.port)
-      if @legos.logger then @env.log "init db (#{colors.red(@settings.name)} at #{data})", {}, 'init','ok'
+      if @legos.logger then @env.log "init db (#{colors.red(@settings.name)} at #{data})", {}, module: 'mongo', init: true, ok: true
 
       callback undefined, data
 
@@ -24,14 +23,14 @@ export lego = Backbone.Model.extend4000 do
       if obj.id
         id = obj.id
         delete obj.id
-        obj <<< _id: id
+        obj <<< _id: new ObjectId(id)
       else obj
 
     translateIn = (obj) ->
       if obj._id
         id = obj._id
         delete obj._id
-        obj <<< id: id
+        obj <<< id: String(id)
       else obj
 
     # backbone sync implementation
@@ -48,6 +47,7 @@ export lego = Backbone.Model.extend4000 do
             collection.insert model.toJSON!
             .then ->
               model.attributes <<< translateIn head it.ops
+              model
             
           | 'read' =>
             switch model?@@
@@ -57,21 +57,27 @@ export lego = Backbone.Model.extend4000 do
                   model.attributes <<< it
                 
               | (collectionConstructor or false) =>
-                model.reset!
+                console.log "MAP START", options.search or {}
                 collection.find( options.search or {}).toArray().then ->
-                  map it, (entry) -> model.add new modelConstructor translateIn entry
+                  model.reset!
+                  map it, (entry) ->
+                    console.log "MAP ADD", model.add new modelConstructor translateIn entry
+                  console.log "MAPPING DONE"
+                  model
                     
-              | _ => throw new Error "wat"
+              | _ =>
+                console.log 'got model', model
+                throw new Error "wat"
                 
           
           | 'update' =>
-            collection.update { "_id": model.get('id') }, { '$set': model.changed }
+            collection.update { "_id": ObjectId(model.get('id')) }, { '$set': model.changed }
             .then ({ result }) -> new p (resolve,reject) ~>
               if result.ok isnt 1 or result.nModified isnt 1 then return reject new Error "update failed"
-              resolve model.attributes
+              resolve model
             
           | 'delete' =>
-            collection.remove { "_id": model.get('id') }
+            collection.remove { "_id": ObjectId(model.get('id')) }
             .then -> true
 
           | _ => throw new Error "unknwon backbone sync method (#{method})"
