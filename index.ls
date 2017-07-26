@@ -55,7 +55,7 @@ export sync = ({collectionName, modelConstructor, collectionConstructor, verbose
           | _ => throw new Error "wat"
 
       | 'update' =>
-        collection.update { "_id": ObjectId(model.get('id')) }, { '$set': model.changed }
+        collection.update { "_id": ObjectId(model.get('id')) }, { '$set': model.toJSON! }
         .then ({ result }) -> new p (resolve,reject) ~>
           if result.ok isnt 1 or result.nModified isnt 1 then return reject new Error "update failed"
           resolve model
@@ -65,7 +65,6 @@ export sync = ({collectionName, modelConstructor, collectionConstructor, verbose
         .then -> true
 
       | _ => throw new Error "unknwon backbone sync method (#{method})"
-
 
 export lego = Backbone.Model.extend4000 do
   after: 'logger'
