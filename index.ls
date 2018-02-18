@@ -57,7 +57,11 @@ export sync = ({collectionName, modelConstructor, collectionConstructor, verbose
       | 'update' =>
         collection.update { "_id": ObjectId(model.get('id')) }, { '$set': model.toJSON! }
         .then ({ result }) -> new p (resolve,reject) ~>
-          if result.ok isnt 1 or result.nModified isnt 1 then return reject new Error "update failed"
+          if result.ok isnt 1
+            console.log model.get('id'), model.toJSON!, result
+            return reject new Error "update failed"
+          if result.nModified isnt 1
+            return false
           resolve model
 
       | 'delete' =>

@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/leshy/ribcage_db.git"
+    "url": "git@github.com:leshy/ribcage_mongo.git"
   },
   "dependencies": {
     "backbone4000": "git://github.com/leshy/backbone4000.git",
-    "bluebird": "^3.5.0",
+    "bluebird": "^3.5.1",
     "colors": "^1.1.2",
     "leshdash": "git://github.com/leshy/leshdash.git",
-    "mongodb": "^2.2.24"
+    "mongodb": "^3.0.2"
   },
   "author": "lesh",
   "license": "ISC",
